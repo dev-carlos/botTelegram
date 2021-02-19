@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi panel de bot</title>
+
+    <style>
+        * {
+         box-sizing: border-box; 
+         font-size: large;
+         font-family: Verdana, Geneva, Tahoma, sans-serif;
+        background-color: rgba(230, 225, 225, 0.692)
+        }
+        li{
+            padding: 10px;
+            margin: 0px 10px;
+            background-color: rgba(0, 255, 255, 0.651);
+        }
+        .titulo{
+            background-color: rgba(0, 255, 255, 0.582);
+            font-size: xx-large;
+            font-weight: 600;
+            margin: auto;
+            padding: 1em;
+        }
+        .encabezado{
+            font-weight: 400;          
+        }
+        .myForm {
+          display: flex;
+          background-color: rgb(30, 191, 240);
+          border-radius: 3px;
+          padding: 1.8em;
+          
+        }
+        
+        label{
+            margin-bottom: 1em;
+        }
+        .caja_mensaje {
+          margin-right: 2em; 
+          display: flex;
+          flex-direction: column;
+        }
+        .caja_mensaje > textarea {
+         flex: 1; 
+         min-width: 18em;
+         min-height: 18em;
+        }
+        .contact {
+            display: flex;
+            flex-flow: column wrap;
+        }
+        .contact input, select {
+            margin-bottom: 1em;
+            padding: 1em;
+           min-height: 2em;
+        }
+        .contact input,
+        .contact button {
+          padding: 1em;
+          margin-bottom: 1em;
+        }
+        .contact button {
+         background: gray;
+         color: rgb(248, 249, 250);
+         border: 0;
+        }
+        ul{
+            list-style-image: url('icon.png');
+            
+        }
+        
+      </style>
+
+
+<script>
+
+    let arrayUsuarios, selectUsuarios, listaDatos, btnUno, btnTodos, txt_msg, idUsuario;
+
+    //una vez cargado el html
+
+    window.onload = () =>{
+
+        selectUsuarios = document.querySelector('#idUsuario');
+        listaDatos = document.querySelector("#listaInfo");
+        arrayUsuarios = [];
+
+        //añado event listener a botones
+        btnUno = document.querySelector("#btnUno");
+        btnTodos = document.querySelector("#btnTodos");
+        btnUno.addEventListener("click", enviarAUno, false);
+        btnTodos.addEventListener("click", enviarATodos, false);
+
+        //el mensaje y el idChat
+        txt_msg = document.querySelector("#txt_msg");
+        idUsuario = document.querySelector("#idUsuario");
+
+
+        //cada 5 segundos obtenemos los datos del txt
+        setInterval( obtenerInfo, 5000);
+
+    }
+
+    //funcion enviar a todos
+    const enviarATodos =(e) => {
+        arrayUsuarios.forEach(element => {
+            enviar(txt_msg.value, element);
+        })
+    }
+
+
+    //funcion para enviar mensaje a idChat seleccionado
+    const enviarAUno = (e)=>{
+        
+        if(txt_msg.value != '')
+        enviar(txt_msg.value, idUsuario.value);
+        
+    }
+
+    //funcion que envia mensaje por post
+    const enviar = (txt, id)=>{
+        // (A) datos a enviar
+        var data = {
+            "mensaje" : txt,
+            "idChat" : id
+        };
+        // (B) envio AJAX 
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://collative-shave.000webhostapp.com/enviarDesdePanel.php");
+        xhr.onload = function () {
+            if (this.status==200) {
+                console.log(this.response);
+            } else {
+                alert("ERROR LOADING FILE!");
+                console.log(this.status);
+                console.log(this.response);
+            }
+        };
+        xhr.send(JSON.stringify(data));
+    }
+
+    
+    //peticion que optiene los datos del txt en server
+    const obtenerInfo = ()=>{
+        fetch('https://collative-shave.000webhostapp.com/obtenerInfo.php',
+            {
+                'headers': {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                'method':'POST',
+                'body': JSON.stringify({'option': 1}),
+            })
+
+            
+            .then(function (response) { //tipo de repuesta
+            return response.json();
+            })
+            .then(function (body) { //proceso los datos
+               
+                listaDatos.innerHTML = '';
+                selectUsuarios.innerText = '';
+                body.forEach(element => {
+                    if(element[0] != ''){
+                        let codigo = element[0];
+                        if(!arrayUsuarios.includes(codigo)){
+                            arrayUsuarios.push(codigo);
+                            
+                        }
+                        let html = `IdChat: ${codigo} --- mensaje: ${element[1]} --- Nombre: ${element[2]}`;
+                        let li = document.createElement('li');
+                        li.appendChild(document.createTextNode(html));
+                        listaDatos.appendChild(li);
+                    }
+                    
+
+                });
+                
+                //añado las opciones al select
+                arrayUsuarios.forEach(element => {
+                    let option = document.createElement('option');
+                    option.text = element;
+                    selectUsuarios.appendChild(option);
+                })
+
+            })
+        .catch(function(err) {
+            console.log('Fetch Error :-S', err);
+        });
+    }
+
+</script>
+
+
+</head>
+<body>
+
+    <h1 class="titulo">Bienvenido al ROBOTv2 <img src="robot.png" alt="robot" width="100"></h1>
+
+    <div>
+
+        <div class="myForm">
+
+            <div class="caja_mensaje">
+              <label class="encabezado" for="msg">Mensaje telegram bot</label>
+              <textarea id="txt_msg"></textarea>
+            </div>
+
+            <div class="contact">
+                <label class="encabezado" for="idUsuario">Elije un usuario o todos:</label>
+
+                <select name="idUsuario" id="idUsuario">
+                  <option>Cargando...</option>
+                </select>
+
+              <button id="btnUno">Enviar a un usuario</button>
+              <button id="btnTodos">Enviar a todos</button>
+
+            </div>
+        </div>
+
+        <div>
+            <ul id="listaInfo"></ul>
+        </div>
+
+
+    </div>
+
+   
+    
+</body>
+</html>
