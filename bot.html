@@ -100,7 +100,7 @@
 
 
         //cada 5 segundos obtenemos los datos del txt
-        obtenerInfo();
+        setInterval( obtenerInfo, 5000);
 
     }
 
@@ -152,9 +152,10 @@
                     'Content-Type': 'application/json'
                 },
                 'method':'POST',
-                //'body': JSON.stringify({'option': 1}),
+                'body': JSON.stringify({'option': 1}),
             })
-          
+
+            
             .then(function (response) { //tipo de repuesta
             return response.json();
             })
@@ -169,7 +170,6 @@
                             arrayUsuarios.push(codigo);
                             
                         }
-                        //añado mensajes en la lista
                         let html = `IdChat: ${codigo} --- mensaje: ${element[1]} --- Nombre: ${element[2]}`;
                         let li = document.createElement('li');
                         li.appendChild(document.createTextNode(html));
